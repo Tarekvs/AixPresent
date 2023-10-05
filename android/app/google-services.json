@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "112099152423",
+    "project_id": "mis-project-ss23",
+    "storage_bucket": "mis-project-ss23.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112099152423:android:974f044c452b6806c27402",
+        "android_client_info": {
+          "package_name": "com.example.presentation_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzjI2HJfpkfPIsQC2WSMmfp6fVfzp8hkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
