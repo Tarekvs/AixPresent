@@ -88,6 +88,30 @@ class StartScreen extends StatelessWidget {
               ),
             ),
           ),
+                    Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                  onPrimary: Colors.white,
+                  minimumSize: Size(double.infinity, double.infinity),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10), // Rounded corners
+                  ),
+                  shadowColor: Colors.grey,
+                  elevation: 10, // Shadow for depth
+                ),
+                child: Text('Audience', style: TextStyle(fontSize: 28)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AudienceScreen()),
+                  );
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
