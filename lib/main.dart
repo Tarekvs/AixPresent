@@ -118,43 +118,59 @@ class StartScreen extends StatelessWidget {
   }
 }
 
-
+// This class defines a stateless widget for the presenter screen.
 class PresenterScreen extends StatelessWidget {
+  // A final string variable to store the presenter's name.
   final String presenterName;
 
+  // Constructor for the PresenterScreen widget. It requires a presenter name to be passed.
   PresenterScreen({required this.presenterName});
 
+  // The build method defines the widget tree for the PresenterScreen.
   @override
   Widget build(BuildContext context) {
+    // Returns a scaffold widget, which provides a basic structure for the app UI.
     return Scaffold(
+      // An app bar at the top of the screen with a title.
       appBar: AppBar(
         title: Text('Presenter Screen'),
       ),
+      // The main content of the screen.
       body: Column(
+        // Centering the main axis content.
         mainAxisAlignment: MainAxisAlignment.center,
+        // Stretching the cross axis content to fill the screen width.
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        // A list of child widgets for the column.
         children: <Widget>[
+          // Expanded widget makes the child occupy all available space.
           Expanded(
             child: Padding(
+              // Adds padding around the button.
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
+                // Styling the button.
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.green,
-                  onPrimary: Colors.white,
-                  minimumSize: Size(double.infinity, double.infinity),
+                  primary: Colors.green, // Button color.
+                  onPrimary: Colors.white, // Text and icon color.
+                  minimumSize: Size(double.infinity, double.infinity), // Making the button expand to fill available space.
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // rounded corners
+                    borderRadius: BorderRadius.circular(10), // Rounded corners for the button.
                   ),
-                  shadowColor: Colors.grey,
-                  elevation: 10, // shadow for depth
+                  shadowColor: Colors.grey, // Color of the button's shadow.
+                  elevation: 10, // The depth of the button's shadow.
                 ),
+                // The button's label.
                 child: Text('Upload PDF', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                // Action to perform when the button is pressed.
                 onPressed: () {
+                  // Calls a function to upload a file to Firebase.
                   uploadFileToFirebase(context);
                 },
               ),
             ),
           ),
+          // Another expanded widget for the second button.
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
@@ -164,15 +180,17 @@ class PresenterScreen extends StatelessWidget {
                   onPrimary: Colors.white,
                   minimumSize: Size(double.infinity, double.infinity),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // rounded corners
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   shadowColor: Colors.grey,
-                  elevation: 10, // shadow for depth
+                  elevation: 10,
                 ),
                 child: Text('View Uploaded PDFs', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 onPressed: () {
+                  // Navigates to another screen when the button is pressed.
                   Navigator.push(
                     context,
+                    // Defines the screen to navigate to. It takes the presenter's name as a parameter.
                     MaterialPageRoute(builder: (context) => PDFListScreen(presenterName: presenterName)),
                   );
                 },
@@ -187,52 +205,72 @@ class PresenterScreen extends StatelessWidget {
 
 
 
+  // This function is responsible for uploading files to Firebase.
   Future uploadFileToFirebase(BuildContext context) async {
+    // Using the FilePicker library, it allows the user to pick a file.
     FilePickerResult? result = await FilePicker.platform.pickFiles(
+      // Specifying the type of file to pick. 'custom' allows for specific file extensions.
       type: FileType.custom,
+      // Only allowing PDF files to be picked.
       allowedExtensions: ['pdf'],
     );
 
+    // Check if a file was picked.
     if (result != null) {
+      // Convert the picked file into a File object.
       File file = File(result.files.single.path!);
 
       try {
+        // Extracting the file name from the picked file.
         String fileName = result.files.single.name;
+        // Using FirebaseStorage to upload the file under the 'pdfs' directory with the original filename.
         await FirebaseStorage.instance.ref('pdfs/$fileName').putFile(file);
+        // If successful, show a snackbar message indicating the success.
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('File uploaded successfully')));
       } catch (e) {
+        // If an error occurs, print the error and show a snackbar message indicating the failure.
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload file')));
       }
     } else {
-      // User canceled the picker
+      // If the user cancels the file picker, no action is taken.
     }
   }
-
+// This class defines a stateless widget for the audience screen.
 class AudienceScreen extends StatelessWidget {
+  // The build method defines the widget tree for the AudienceScreen.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // An app bar at the top of the screen with a title.
       appBar: AppBar(
         title: Text('Audience Screen'),
       ),
+      // The main content of the screen.
       body: StreamBuilder<QuerySnapshot>(
+        // Establishing a stream to listen to changes in the 'sessions' collection in Firestore.
         stream: FirebaseFirestore.instance.collection('sessions').snapshots(),
         builder: (context, snapshot) {
+          // If there's an error with the snapshot, display an error message.
           if (snapshot.hasError) {
             return Center(child: Text('Something went wrong'));
           }
 
+          // While waiting for the snapshot to load, display a loading spinner.
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
 
+          // Creating a list view to display the documents in the 'sessions' collection.
           return ListView.builder(
+            // The number of items is equal to the number of documents in the snapshot.
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
+              // Extracting the document and its data at the current index.
               var doc = snapshot.data!.docs[index];
-              var docData = doc.data() as Map<String, dynamic>; // get document data first
+              var docData = doc.data() as Map<String, dynamic>;
 
+              // Returning a card for each document.
               return Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -243,7 +281,8 @@ class AudienceScreen extends StatelessWidget {
                 child: ListTile(
                   tileColor: Colors.green,
                   title: Text(
-                    docData['presenterName'] ?? 'N/A', // access field from document data, provvide a default value
+                    // Displaying the 'presenterName' field from the document data or 'N/A' if it doesn't exist.
+                    docData['presenterName'] ?? 'N/A',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -251,26 +290,35 @@ class AudienceScreen extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    docData['pdfName'] ?? 'N/A', // access field from document data, provide a default value
+                    // Displaying the 'pdfName' field from the document data or 'N/A' if it doesn't exist.
+                    docData['pdfName'] ?? 'N/A',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white70,
                     ),
                   ),
+                  // The action to perform when the list tile is tapped.
                   onTap: () async {
                     try {
+                      // Getting the app's document directory.
                       final dir = await getApplicationDocumentsDirectory();
-                      final file = File('${dir.path}/${docData['pdfName']}'); // access field from document data
+                      // Creating a file reference using the 'pdfName' from the document data.
+                      final file = File('${dir.path}/${docData['pdfName']}');
 
+                      // If the file doesn't already exist in the app's directory...
                       if (!(await file.exists())) {
-                        final ref = FirebaseStorage.instance.ref('pdfs/${docData['pdfName']}'); // access field from document data
+                        // ...create a reference to the file in Firebase Storage.
+                        final ref = FirebaseStorage.instance.ref('pdfs/${docData['pdfName']}');
+                        // ...and download the file data.
                         final data = await ref.getData();
 
+                        // If the data exists, write it to the file.
                         if (data != null) {
                           await file.writeAsBytes(data as List<int>);
                         }
                       }
 
+                      // Navigate to the PDFScreen, passing the file path and other necessary details.
                       await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => PDFScreen(
@@ -281,6 +329,7 @@ class AudienceScreen extends StatelessWidget {
                         );
 
                     } catch (e) {
+                      // If an error occurs, print the error and display a snackbar with a failure message.
                       print(e);
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to open file')));
                     }
@@ -297,51 +346,67 @@ class AudienceScreen extends StatelessWidget {
 
 
 
+
+// This class defines a stateful widget for the PDF list screen.
 class PDFListScreen extends StatefulWidget {
+  // A final string variable to store the presenter's name.
   final String presenterName;
 
+  // Constructor for the PDFListScreen widget. It requires a presenter name to be passed.
   PDFListScreen({required this.presenterName});
 
+  // Creates the mutable state for this widget.
   @override
   _PDFListScreenState createState() => _PDFListScreenState();
 }
 
+// This class defines the mutable state for the PDFListScreen widget.
 class _PDFListScreenState extends State<PDFListScreen> {
+  // List of references to the PDF files in Firebase Storage.
   List<Reference> pdfReferences = [];
+  // Boolean to track the loading state.
   bool isLoading = true;
 
+  // This method is called when this widget is inserted into the tree.
   @override
   void initState() {
     super.initState();
-    fetchPDFs();
+    fetchPDFs(); // Fetch the list of PDFs from Firebase Storage.
   }
 
+  // Asynchronously fetch the list of PDFs from Firebase Storage.
   void fetchPDFs() async {
     ListResult result = await FirebaseStorage.instance.ref('pdfs').listAll();
     pdfReferences = result.items;
 
+    // Update the state to reflect that the loading has completed.
     setState(() {
       isLoading = false;
     });
   }
 
+  // Asynchronously open a selected PDF.
   Future<void> openPdf(Reference ref) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/${ref.name}');
 
+      // If the selected PDF doesn't already exist locally...
       if (!(await file.exists())) {
         final data = await ref.getData();
+        // If the data exists, write it to the file.
         if (data != null) {
           await file.writeAsBytes(data as List<int>);
         }
       }
 
+      // Add a document to the 'sessions' collection in Firestore with the presenter's name and the PDF name.
       await FirebaseFirestore.instance.collection('sessions').doc('${widget.presenterName}_${ref.name}').set({
         'presenterName': widget.presenterName,
         'pdfName': ref.name,
       });
 
+      // Navigate to the PDFScreen, passing the file path and other necessary details.
       await Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => PDFScreen(
@@ -352,21 +417,28 @@ class _PDFListScreenState extends State<PDFListScreen> {
                                             isPresenter: true)),
       );
 
+      // After returning from the PDFScreen, delete the document from the 'sessions' collection.
       await FirebaseFirestore.instance.collection('sessions').doc('${widget.presenterName}_${ref.name}').delete();
     } catch (e) {
+      // If an error occurs, print the error and display a snackbar with a failure message.
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to open file')));
     }
   }
 
+  // This method defines the widget tree for the _PDFListScreenState.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // An app bar at the top of the screen with a title.
       appBar: AppBar(
         title: Text('PDF Files'),
       ),
+      // The main content of the screen.
       body: isLoading
+          // If still loading, display a loading spinner.
           ? Center(child: CircularProgressIndicator())
+          // Otherwise, display the list of PDFs.
           : ListView.builder(
               itemCount: pdfReferences.length,
               itemBuilder: (context, index) {
@@ -387,6 +459,7 @@ class _PDFListScreenState extends State<PDFListScreen> {
                         color: Colors.white,
                       ),
                     ),
+                    // Open the selected PDF when the list tile is tapped.
                     onTap: () => openPdf(pdfReferences[index]),
                   ),
                 );
@@ -397,11 +470,17 @@ class _PDFListScreenState extends State<PDFListScreen> {
 }
 
 
+// This class defines a stateful widget for the PDF viewer screen.
 class PDFScreen extends StatefulWidget {
+  // Path to the local PDF file.
   final String path;
+  // Unique session ID based on presenter name and PDF name.
   final String sessionID;
+  // Boolean to determine if the current user is a presenter.
   final bool isPresenter;
+  // Name of the presenter.
   final String presenterName;
+  // Name of the PDF.
   final String pdfName;
 
   const PDFScreen({
@@ -410,17 +489,22 @@ class PDFScreen extends StatefulWidget {
     required this.sessionID,
     required this.presenterName,
     required this.pdfName,
-    this.isPresenter = false,
+    this.isPresenter = false, // Default value if not provided.
   }) : super(key: key);
 
+  // Creates the mutable state for this widget.
   @override
   _PDFScreenState createState() => _PDFScreenState();
 }
 
+// This class defines the mutable state for the PDFScreen widget.
 class _PDFScreenState extends State<PDFScreen> {
+  // Current page number of the PDF.
   int currentPage = 0;
+  // Controller for the PDF viewer.
   PDFViewController? pdfViewController;
 
+  // Save the current session details to Firestore.
   void saveCurrentPresenterSession(int currentPage) {
     FirebaseFirestore.instance.collection('sessions').doc(widget.sessionID).set({
       'presenterName': widget.presenterName,
@@ -429,44 +513,60 @@ class _PDFScreenState extends State<PDFScreen> {
     });
   }
 
-   @override
+  // This method defines the widget tree for the _PDFScreenState.
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
+      // Establishing a stream to listen to changes in the current session document in Firestore.
       stream: FirebaseFirestore.instance.collection('sessions').doc(widget.sessionID).snapshots(),
       builder: (context, snapshot) {
+        // If the snapshot has data...
         if (snapshot.hasData && snapshot.data != null) {
-          if (!snapshot.data!.exists) { // Check if the session no longer exists
+          // If the session document no longer exists in Firestore...
+          if (!snapshot.data!.exists) {
             WidgetsBinding.instance?.addPostFrameCallback((_) {
-              Navigator.pop(context); // Pop the audience member out of the PDFScreen
+              // ...pop the user out of the PDFScreen.
+              Navigator.pop(context);
             });
-            return Container(); // Return an empty container or some other widget for the frame
+            // Return an empty container for the current frame.
+            return Container();
           }
           
           var data = snapshot.data!.data() as Map<String, dynamic>?;
+          // If the session data contains a 'currentPage' field...
           if (data != null && data.containsKey('currentPage')) {
+            // ...update the currentPage variable.
             currentPage = data['currentPage'] ?? 0;
+            // Set the PDF viewer to the current page.
             pdfViewController?.setPage(currentPage);
           }
         }
 
         return Scaffold(
+          // An app bar at the top of the screen with a title.
           appBar: AppBar(
             title: Text('PDF Viewer'),
           ),
+          // The main content of the screen.
           body: PDFView(
             filePath: widget.path,
             autoSpacing: true,
             pageSnap: true,
             swipeHorizontal: true,
+            // Callback for when the PDFView is created.
             onViewCreated: (PDFViewController pdfViewController) {
               this.pdfViewController = pdfViewController;
             },
+            // Callback for errors.
             onError: (e) {
               print(e);
             },
+            // Callback for when the page changes in the PDF viewer.
             onPageChanged: (int? page, int? total) {
+              // If the current user is the presenter and the page has changed...
               if (widget.isPresenter && page != null) {
                 currentPage = page;
+                // ...save the current session details to Firestore.
                 saveCurrentPresenterSession(currentPage);
               }
             },
