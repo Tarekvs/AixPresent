@@ -17,7 +17,7 @@ is shown.
 The presenter has the necessary controls to navigate between slides and stop the
 presentation.
 
-#Audience
+# Audience
 Audience members see a list of ongoing presentations. By selecting a
 presentation, they become part of the audience. The app shows the current slide of the
 presentation, and the screen is updated accordingly to the navigation of the presenter.
